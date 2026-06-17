@@ -1,0 +1,240 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum RiskEventType {
+  GEOPOLITICAL
+  NATURAL_DISASTER
+  PORT_CONGESTION
+  SUPPLIER_DEFAULT
+  TRANSPORT_DISRUPTION
+  REGULATORY_CHANGE
+  OTHER
+}
+
+enum ApprovalStatus {
+  PENDING_PROCUREMENT
+  PENDING_LOGISTICS
+  APPROVED
+  REJECTED
+  ESCALATED
+  TIMEOUT_ESCALATED
+}
+
+enum AlertStatus {
+  ACTIVE
+  PROCESSING
+  RESOLVED
+  CANCELLED
+}
+
+enum OrderStatus {
+  NORMAL
+  AFFECTED
+  RE_ROUTED
+  COMPLETED
+  CANCELLED
+}
+
+enum SupplierRiskLevel {
+  NORMAL
+  ELEVATED
+  HIGH_RISK
+}
+
+model Supplier {
+  id              String           @id @default(uuid())
+  name            String
+  country         String
+  region          String
+  category        String
+  creditScore     Int              @default(100)
+  riskLevel       SupplierRiskLevel @default(NORMAL)
+  isBackup        Boolean          @default(false)
+  active          Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  orders          Order[]
+  riskEvents      SupplierRiskEvent[]
+  auditTrails     SupplierAuditTrail[]
+  altMatches      AlternativeMatch[] @relation("BackupSupplier")
+}
+
+model SupplierRiskEvent {
+  id            String   @id @default(uuid())
+  supplierId    String
+  riskEventId   String
+  createdAt     DateTime @default(now())
+
+  supplier      Supplier @relation(fields: [supplierId], references: [id])
+  riskEvent     RiskEvent @relation(fields: [riskEventId], references: [id])
+
+  @@unique([supplierId, riskEventId])
+}
+
+model SupplierAuditTrail {
+  id            String   @id @default(uuid())
+  supplierId    String
+  action        String
+  details       String
+  performedBy   String
+  createdAt     DateTime @default(now())
+
+  supplier      Supplier @relation(fields: [supplierId], references: [id])
+}
+
+model RiskEvent {
+  id              String        @id @default(uuid())
+  type            RiskEventType
+  title           String
+  description     String
+  affectedRegions String
+  impactLevel     RiskLevel
+  status          AlertStatus   @default(ACTIVE)
+  source          String
+  occurredAt      DateTime
+  detectedAt      DateTime      @default(now())
+  resolvedAt      DateTime?
+
+  alerts          Alert[]
+  supplierEvents  SupplierRiskEvent[]
+  orders          Order[]
+
+  @@index([status])
+  @@index([impactLevel])
+  @@index([detectedAt])
+}
+
+model Alert {
+  id              String      @id @default(uuid())
+  riskEventId     String
+  level           RiskLevel
+  title           String
+  message         String
+  status          AlertStatus @default(ACTIVE)
+  targetRoles     String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  riskEvent       RiskEvent   @relation(fields: [riskEventId], references: [id])
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  orderNo         String      @unique
+  supplierId      String
+  commodity       String
+  quantity         Int
+  unitPrice        Float
+  currency        String      @default("USD")
+  originPort      String
+  destPort        String
+  route           String
+  status          OrderStatus @default(NORMAL)
+  riskEventId     String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  supplier        Supplier    @relation(fields: [supplierId], references: [id])
+  riskEvent       RiskEvent?  @relation(fields: [riskEventId], references: [id])
+  alternatives    AlternativeMatch[]
+
+  @@index([status])
+  @@index([supplierId])
+}
+
+model AlternativeMatch {
+  id                String   @id @default(uuid())
+  orderId           String
+  backupSupplierId  String
+  alternativeRoute  String?
+  estimatedCost     Float
+  estimatedDelay    Int
+  score             Float
+  selected          Boolean  @default(false)
+  createdAt         DateTime @default(now())
+
+  order             Order    @relation(fields: [orderId], references: [id])
+  backupSupplier    Supplier @relation("BackupSupplier", fields: [backupSupplierId], references: [id])
+  approval          Approval?
+}
+
+model Approval {
+  id                    String          @id @default(uuid())
+  alternativeMatchId    String          @unique
+  status                ApprovalStatus  @default(PENDING_PROCUREMENT)
+  procurementApprover   String?
+  procurementComment    String?
+  procurementApprovedAt DateTime?
+  logisticsApprover     String?
+  logisticsComment      String?
+  logisticsApprovedAt   DateTime?
+  escalatedTo           String?
+  escalationReason      String?
+  deadline              DateTime
+  reminderSentAt        DateTime?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  alternativeMatch      AlternativeMatch @relation(fields: [alternativeMatchId], references: [id])
+
+  @@index([status])
+  @@index([deadline])
+}
+
+model Settlement {
+  id                String   @id @default(uuid())
+  orderId           String
+  originalCost      Float
+  additionalCost    Float
+  totalCost         Float
+  currency          String   @default("USD")
+  description       String
+  generatedAt       DateTime @default(now())
+  approvedAt        DateTime?
+
+  @@index([orderId])
+  @@index([generatedAt])
+}
+
+model ResilienceReport {
+  id                    String   @id @default(uuid())
+  month                 String
+  totalRiskEvents       Int
+  avgResponseTime       Float
+  alternativeAdoptionRate Float
+  costOverspendDistribution String
+  generatedAt           DateTime @default(now())
+
+  @@unique([month])
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  type        String
+  title       String
+  message     String
+  targetRoles String
+  payload     String
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([targetRoles])
+  @@index([createdAt])
+}
