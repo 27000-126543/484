@@ -1,26 +1,53 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomePage from '@/pages/HomePage.vue'
+import { constantRoutes } from './routes'
+import { useUserStore } from '@/stores/user'
+import { getDefaultHome, hasPermission } from '@/utils/auth'
 
-// 定义路由配置
-const routes = [
-  {
-    path: '/',
-    name: 'home',
-    component: HomePage,
-  },
-  {
-    path: '/about',
-    name: 'about',
-    component: {
-      template: '<div class="text-center text-xl p-8">About Page - Coming Soon</div>',
-    },
-  },
-]
-
-// 创建路由实例
 const router = createRouter({
   history: createWebHistory(),
-  routes,
+  routes: constantRoutes,
+})
+
+const whiteList = ['/login']
+
+router.beforeEach((to, _from, next) => {
+  const userStore = useUserStore()
+  const hasToken = userStore.isLoggedIn
+  const userRole = userStore.role
+
+  if (whiteList.includes(to.path)) {
+    if (hasToken) {
+      next(getDefaultHome(userRole))
+    } else {
+      next()
+    }
+    return
+  }
+
+  if (!hasToken) {
+    next({
+      path: '/login',
+      query: { redirect: to.fullPath },
+    })
+    return
+  }
+
+  const metaRoles = to.meta?.roles as string[] | undefined
+  if (!hasPermission(metaRoles, userRole)) {
+    next(getDefaultHome(userRole))
+    return
+  }
+
+  next()
+})
+
+router.afterEach((to) => {
+  const title = to.meta?.title as string | undefined
+  if (title) {
+    document.title = `${title} - 供应链风险监控平台`
+  } else {
+    document.title = '供应链风险监控平台'
+  }
 })
 
 export default router

@@ -10,31 +10,41 @@ export const usePermissionStore = defineStore('permission', () => {
 
   const addRoutes = ref<RouteRecordRaw[]>([])
 
-  const menuRoutes = computed<RouteRecordRaw[]>(() => {
+  function filterMenuRoutes(routes: RouteRecordRaw[], role: string): RouteRecordRaw[] {
+    const result: RouteRecordRaw[] = []
+    for (const route of routes) {
+      const meta = route.meta as any
+      const hidden = meta?.hidden === true
+      const roles = meta?.roles as string[] | undefined
+
+      if (!hasPermission(roles, role)) continue
+      if (hidden) continue
+
+      const item = { ...route }
+      if (item.children && item.children.length > 0) {
+        const filteredChildren = filterMenuRoutes(item.children, role)
+        if (filteredChildren.length > 0) {
+          item.children = filteredChildren
+        } else {
+          delete item.children
+        }
+      }
+      result.push(item)
+    }
+    return result
+  }
+
+  const menuItems = computed<RouteRecordRaw[]>(() => {
     const role = userStore.role
     if (!role) return []
 
-    function filter(routes: RouteRecordRaw[]): RouteRecordRaw[] {
-      const result: RouteRecordRaw[] = []
-      for (const route of routes) {
-        const meta = route.meta as any
-        const hidden = meta?.hidden === true
-        const roles = meta?.roles as string[] | undefined
+    const adminLayout = constantRoutes.find((r) => r.path === '/')
+    if (!adminLayout || !adminLayout.children) return []
 
-        if (!hasPermission(roles, role)) continue
-        if (hidden) continue
-
-        const item = { ...route }
-        if (item.children && item.children.length > 0) {
-          item.children = filter(item.children)
-        }
-        result.push(item)
-      }
-      return result
-    }
-
-    return filter(constantRoutes)
+    return filterMenuRoutes(adminLayout.children, role)
   })
+
+  const menuRoutes = computed<RouteRecordRaw[]>(() => menuItems.value)
 
   function generateRoutes() {
     addRoutes.value = menuRoutes.value
@@ -44,6 +54,7 @@ export const usePermissionStore = defineStore('permission', () => {
   return {
     addRoutes,
     menuRoutes,
+    menuItems,
     generateRoutes,
   }
 })
