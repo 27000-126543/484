@@ -18,19 +18,25 @@
             <el-input
               v-model="form.username"
               placeholder="请输入用户名"
-              :prefix-icon="User"
               clearable
-            />
+            >
+              <template #prefix>
+                <User :size="18" class="text-slate-400" />
+              </template>
+            </el-input>
           </el-form-item>
           <el-form-item label="密码" prop="password">
             <el-input
               v-model="form.password"
               type="password"
               placeholder="请输入密码"
-              :prefix-icon="Lock"
               show-password
               @keyup.enter="handleLogin"
-            />
+            >
+              <template #prefix>
+                <Lock :size="18" class="text-slate-400" />
+              </template>
+            </el-input>
           </el-form-item>
           <el-form-item>
             <el-button
@@ -58,7 +64,7 @@
 import { reactive, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import { User, Lock } from '@element-plus/icons-vue'
+import { User, Lock } from 'lucide-vue-next'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()

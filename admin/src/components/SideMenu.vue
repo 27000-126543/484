@@ -51,19 +51,19 @@ import { useRoute } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import { usePermissionStore } from '@/stores/permission'
 import {
-  DataBoard,
-  Tickets,
-  Document,
-  Warning,
-  Operation,
-  DataAnalysis,
+  LayoutDashboard,
+  Ticket,
+  FileText,
+  AlertTriangle,
+  ScrollText,
+  BarChart3,
   Search,
-  DocumentChecked,
-  Setting,
-  User,
-  UserFilled,
-  Tools,
-} from '@element-plus/icons-vue'
+  FileCheck,
+  Settings,
+  Users,
+  Shield,
+  Wrench,
+} from 'lucide-vue-next'
 import type { Component } from 'vue'
 
 const route = useRoute()
@@ -76,18 +76,18 @@ const menuRoutes = computed<RouteRecordRaw[]>(() => {
 const activeMenu = computed(() => route.path)
 
 const iconMap: Record<string, Component> = {
-  DataBoard,
-  Tickets,
-  Document,
-  Warning,
-  Operation,
-  DataAnalysis,
-  Search,
-  DocumentChecked,
-  Setting,
-  User,
-  UserFilled,
-  Tools,
+  DataBoard: LayoutDashboard,
+  Tickets: Ticket,
+  Document: FileText,
+  Warning: AlertTriangle,
+  Operation: ScrollText,
+  DataAnalysis: BarChart3,
+  Search: Search,
+  DocumentChecked: FileCheck,
+  Setting: Settings,
+  User: Users,
+  UserFilled: Shield,
+  Tools: Wrench,
 }
 
 function getIcon(r: RouteRecordRaw): Component | null {

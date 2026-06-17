@@ -11,7 +11,7 @@
           <template #header>
             <div class="flex justify-between items-center">
               <div class="flex items-center gap-2">
-                <el-icon :size="20"><component :is="role.icon" /></el-icon>
+                <component :is="role.icon" :size="20" />
                 <span class="font-medium">{{ role.name }}</span>
               </div>
               <el-tag size="small" :type="role.tagType">
@@ -45,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { User, UserFilled, Setting, Shield } from '@element-plus/icons-vue'
+import { User, Users, Settings, Shield } from 'lucide-vue-next'
 
 const roles = [
   {
@@ -61,7 +61,7 @@ const roles = [
     id: 2,
     name: '主管',
     tagType: 'warning',
-    icon: UserFilled,
+    icon: Users,
     userCount: 5,
     desc: '负责全局监控与管理，可查看所有工单和审计日志',
     permissions: ['监控大盘', '全量工单', '异常事件', '预案管理', '报表统计', '日志查询', '审计日志', '系统管理'],

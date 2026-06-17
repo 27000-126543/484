@@ -9,7 +9,7 @@
             <p class="text-2xl font-bold mt-1" :class="item.color">{{ item.value }}</p>
           </div>
           <div class="w-12 h-12 rounded-full flex items-center justify-center" :class="item.bg">
-            <el-icon :size="24" :class="item.iconColor"><component :is="item.icon" /></el-icon>
+            <component :is="item.icon" :size="24" :class="item.iconColor" />
           </div>
         </div>
       </el-card>
@@ -53,11 +53,11 @@
 </template>
 
 <script setup lang="ts">
-import { Warning, Tickets, FileText, TrendingUp } from '@element-plus/icons-vue'
+import { AlertTriangle, Ticket, FileText, TrendingUp } from 'lucide-vue-next'
 
 const stats = [
-  { label: '今日风险事件', value: 23, icon: Warning, color: 'text-red-500', bg: 'bg-red-50', iconColor: 'text-red-500' },
-  { label: '待处理工单', value: 87, icon: Tickets, color: 'text-amber-500', bg: 'bg-amber-50', iconColor: 'text-amber-500' },
+  { label: '今日风险事件', value: 23, icon: AlertTriangle, color: 'text-red-500', bg: 'bg-red-50', iconColor: 'text-red-500' },
+  { label: '待处理工单', value: 87, icon: Ticket, color: 'text-amber-500', bg: 'bg-amber-50', iconColor: 'text-amber-500' },
   { label: '在线供应商', value: 156, icon: FileText, color: 'text-green-500', bg: 'bg-green-50', iconColor: 'text-green-500' },
   { label: '月处置率', value: '96.2%', icon: TrendingUp, color: 'text-blue-500', bg: 'bg-blue-50', iconColor: 'text-blue-500' },
 ]
